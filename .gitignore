@@ -1,2 +1,6 @@
 Slack/envSlack
 **/.env
+Slack/emailBot/test.ipynb
+__pycache__/
+*.pyc
+*.pyo
