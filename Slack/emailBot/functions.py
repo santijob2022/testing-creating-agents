@@ -1,17 +1,14 @@
-from langchain.chat_models import ChatOpenAI
-from langchain.chains import LLMChain
+from langchain_groq import ChatGroq
 from dotenv import find_dotenv, load_dotenv
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 load_dotenv(find_dotenv())
 
 
-def draft_email(user_input, name="Dave"):
-    chat = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=1)
+def draft_email(user_input, name="Valentin"):
+    # chat = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=1)
+    chat = ChatGroq(model="Gemma2-9b-It")
 
     template = """
     
@@ -27,17 +24,21 @@ def draft_email(user_input, name="Dave"):
     
     """
 
-    signature = f"Kind regards, \n\{name}"
-    system_message_prompt = SystemMessagePromptTemplate.from_template(template)
+    signature = f"Kind regards, \n{name}"
+    messages = [
+        SystemMessage(content=template.format(name=name, signature=signature)),
+        HumanMessage(content=f"Here's the email to reply to and consider any other comments from the user: {user_input}")
+    ]
 
-    human_template = "Here's the email to reply to and consider any other comments from the user for reply as well: {user_input}"
-    human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
+    # Create the chat prompt
+    chat_prompt = ChatPromptTemplate(messages=messages)
 
-    chat_prompt = ChatPromptTemplate.from_messages(
-        [system_message_prompt, human_message_prompt]
-    )
-
-    chain = LLMChain(llm=chat, prompt=chat_prompt)
-    response = chain.run(user_input=user_input, signature=signature, name=name)
-
-    return response
+    # Define and execute the chain
+    chain = chat_prompt | chat
+    response = chain.invoke({
+        "user_input": user_input, 
+        "signature": signature, 
+        "name": name
+    })
+    return response.content if isinstance(response, AIMessage) else response
+    # return response

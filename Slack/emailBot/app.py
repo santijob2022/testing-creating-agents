@@ -19,7 +19,6 @@ SLACK_BOT_USER_ID = os.environ["SLACK_BOT_USER_ID"]
 app = App(token=SLACK_BOT_TOKEN)
 
 # Initialize the Flask app
-# Flask is a web application framework written in Python
 flask_app = Flask(__name__)
 handler = SlackRequestHandler(app)
 
@@ -38,7 +37,7 @@ def get_bot_user_id():
     except SlackApiError as e:
         print(f"Error: {e}")
 
-
+# Defined only for the inital test
 def my_function(text):
     """
     Custom function to process the text and return a response.
@@ -70,8 +69,8 @@ def handle_mentions(body, say):
     text = text.replace(mention, "").strip()
 
     say("Sure, I'll get right on that!")
-    response = my_function(text)
-    # response = draft_email(text)
+    # response = my_function(text)
+    response = draft_email(text)
     say(response)
 
 
