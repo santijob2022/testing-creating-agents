@@ -1,0 +1,6 @@
+arxiv_search(state: MessagesState) throws an error when using
+
+llm=ChatGroq(model="Llama3-8b-8192")
+llm=ChatGroq(model="qwen-2.5-32b")
+
+Maybe using pydantic can fix this to use open source?
