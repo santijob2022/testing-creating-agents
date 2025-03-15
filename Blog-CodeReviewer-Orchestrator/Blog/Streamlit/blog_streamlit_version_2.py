@@ -59,7 +59,6 @@ def assistant(state:MessagesState):
 
 
 # ## Defining the tools
-
 # #### Arxiv
 from langchain_community.utilities import WikipediaAPIWrapper, ArxivAPIWrapper
 
@@ -78,8 +77,6 @@ def arxiv_search(state: MessagesState):
         doc_content_chars_max=50
     )
     query = state["messages"][-1].content  # Get user query from last message
-    # print("Query definition",query)
-    # input()
     results = arxiv.load(query)  # Load articles
     listed_articles = []  # Initialize list
 
@@ -134,7 +131,6 @@ def custom_condition(state: MessagesState):
     return "create_blog_entry"  
 
 #### Then I define the graph
-
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph, END
 from langgraph.prebuilt import tools_condition, ToolNode
@@ -142,7 +138,7 @@ from IPython.display import Image, display
 
 builder = StateGraph(MessagesState)
 
-## Define the node
+## Define nodes
 builder.add_node("assistant",assistant)
 builder.add_node("human_feedback",human_feedback)
 builder.add_node("tools",ToolNode(tools))
@@ -177,15 +173,13 @@ user_input_topic = st.text_input(
 )
 
 # Initialize session state variables
-if "researching" not in st.session_state:
-    st.session_state.researching = True
 if "wiki_queries" not in st.session_state:
     st.session_state.wiki_queries = []
-if "blog_ready" not in st.session_state:
-    st.session_state.blog_ready = False
+if "create_blog" not in st.session_state:
+    st.session_state.create_blog = None
 
 # If user has entered a topic, start the research
-if user_input_topic and not st.session_state.blog_ready:
+if user_input_topic:
     with st.spinner("Searching on arxiv... ⏳"):        
         # Input        
         messages = {"messages": [HumanMessage(content=user_input_topic)]}
@@ -195,9 +189,9 @@ if user_input_topic and not st.session_state.blog_ready:
             event['messages'][-1].pretty_print()
 
     tool_message = scienceBlogCreator.get_state(thread)[0]['messages'][-1]
-    print("Tool message: ",tool_message)
+    # print("Tool message: ",tool_message)
     researched_articles = eval(tool_message.content)['arxiv_query']
-    print("Updated state", researched_articles)
+    # print("Updated state", researched_articles)
     
     # Ensure two articles exist
     if len(researched_articles) == 2:
@@ -209,7 +203,9 @@ if user_input_topic and not st.session_state.blog_ready:
             st.write(f"**Published:** {researched_articles[0]['Published']}")
             st.write(f"**Authors:** {researched_articles[0]['Authors']}")
             st.write(f"**Summary:** {researched_articles[0]['Summary']}")
-            st.markdown(f"[📄 Read Full Paper]({researched_articles[0]['PDF url']})")
+            st.markdown(f"[📄 Read Full Paper]({researched_articles[0]['PDF url']})")                       
+            if st.button("📝 Create Blog", key="blog_btn_1"):
+                st.session_state.create_blog = "Create Blog Article 1" 
 
         # Display second article in column 2
         with col2:
@@ -217,7 +213,10 @@ if user_input_topic and not st.session_state.blog_ready:
             st.write(f"**Published:** {researched_articles[1]['Published']}")
             st.write(f"**Authors:** {researched_articles[1]['Authors']}")
             st.write(f"**Summary:** {researched_articles[1]['Summary']}")
-            st.markdown(f"[📄 Read Full Paper]({researched_articles [1]['PDF url']})")
+            st.markdown(f"[📄 Read Full Paper]({researched_articles [1]['PDF url']})")                        
+            if st.button("📝 Create Blog", key="blog_btn_2"):
+                st.session_state.create_blog = "Create Blog Article 2"                
+
     else:
         st.warning("⚠️ No Arxiv articles found. Please try a different topic.")
 
@@ -234,93 +233,68 @@ if user_input_topic and not st.session_state.blog_ready:
 
         user_input_wiki = None  # Initialize user input
 
-        with col1:
-            if st.button("📖 Research", key="wiki_btn"):
-                if wiki_term.strip():  # Ensure user has entered something
-                    user_input_wiki = f"Use wikipedia tool to research {wiki_term}"  # Append button state to user_input
-                    st.session_state.wiki_queries.append(user_input_wiki)  # Store action
-                    st.success(f"✅ Research on Wikipedia: {wiki_term}")
-
-        with col2:
-            if st.button("📝 Create Blog", key="blog_btn"):
-                st.session_state.researching = False
-                st.session_state.blog_ready = True  # Stop research, proceed to blog creation
-                user_input_wiki = "Create Blog"
+        if st.button("📖 Research", key="wiki_btn"):
+            if wiki_term.strip():  # Ensure user has entered something
+                user_input_wiki = f"Use wikipedia tool to research {wiki_term}"  # Append button state to user_input
+                st.session_state.wiki_queries.append(user_input_wiki)  # Store action
+                st.success(f"✅ Research on Wikipedia: {wiki_term}")
 
         # Pass action to the graph only if a button was clicked
-        if user_input_wiki and ("Use wikipedia tool" in user_input_wiki):
-            scienceBlogCreator.update_state(
-                thread,
-                {"messages": [
-                    SystemMessage(content="""Based on the next user answer, decide if you should return to the tools 
-                                node to make a Wikipedia search or if you should proceed to create the blog entry."""),  
-                    HumanMessage(content=user_input_wiki)  # Append action to user message
-                ]}
-            )
-            # Stream execution with updated state
-            print("\n\nShowing wiki\n\n")
-            for event in scienceBlogCreator.stream(messages, thread, stream_mode="values"):
-                event['messages'][-1].pretty_print()
-            
-            # Displaying wikipedia result on the UI
-            tool_message = scienceBlogCreator.get_state(thread)[0]['messages'][-1].content
-            _, rest = tool_message.split("Page: ", 1)
-            print("\n\nRest", rest)
-            page_value, summary_value = rest.split("Summary: ")            
-            st.subheader(f"📄 {page_value}")
-            st.write(f"**Summary:** {summary_value}")
-
-            # wiki_result = eval(tool_message.content) #['arxiv_query']
-            # print("Wiki result", wiki_result)
-
+        if user_input_wiki:
+            if "Use wikipedia tool" in user_input_wiki:
+                scienceBlogCreator.update_state(
+                    thread,
+                    {"messages": [
+                        SystemMessage(content="""Based on the next user answer, decide if you should return to the tools 
+                                    node to make a Wikipedia search or if you should proceed to create the blog entry."""),  
+                        HumanMessage(content=user_input_wiki)
+                    ]}
+                )
+                # Stream execution with updated state
+                print("\n\nShowing wiki\n\n")
+                for event in scienceBlogCreator.stream(messages, thread, stream_mode="values"):
+                    event['messages'][-1].pretty_print()
+                
+                # Displaying wikipedia result on the UI
+                tool_message = scienceBlogCreator.get_state(thread)[0]['messages'][-1].content
+                _, rest = tool_message.split("Page: ", 1)
+                print("\n\nRest", rest)
+                page_value, summary_value = rest.split("Summary: ")            
+                st.subheader(f"📄 {page_value}")
+                st.write(f"**Summary:** {summary_value}")
         
-        # elif user_input_wiki == "Create Blog":
-        #     user_input = "Create a blog post about the second article"
-        #     scienceBlogCreator.update_state(
-        #             thread,
-        #             {"messages": [            
-        #                 # HumanMessage(content=user_input),
-        #                 SystemMessage(content=f"""The arxiv articles are ordered here: {listed_articles}.
-        #                             Pick the appropriate article in the list according to the number requested by the user
-        #                             here {user_input}.
-        #                             For instance, if the user wants to create a blog post about the first article,
-        #                             then you should create a blog post about {listed_articles[0]}.
-        #                             If the user wants to create a blog post about the second article,
-        #                             then you should create a blog post about {listed_articles[1]}, and so on                       
-        #                             It should be an engaging post of at most 200 words.
-        #                             The title of the post should be the title of the article.
-        #                             """)
-        #             ]}, as_node="create_blog_entry"
-        #         )
+if st.session_state.create_blog:
+    if "1" in st.session_state.create_blog:
+            n = 1
+            system_message = "Create a blog post about the first article"
+    elif "2" in st.session_state.create_blog:
+            n = 2
+            user_input = "Create a blog post about the second article"
+    scienceBlogCreator.update_state(
+            thread,
+            {"messages": [            
+                # HumanMessage(content=user_input),
+                SystemMessage(content=f"""Create an enaging post of at most 200 words about the article
+                                titled: {researched_articles[n-1]['Title']}.
+                                The title of the post should be the title of the article.
+                            """)
+            ]}, as_node="create_blog_entry"
+        )
+    
+    print("\n\nGenerating blog")
+    st.subheader("✅ Generated Blog:")
+    for event in scienceBlogCreator.stream(messages,thread,stream_mode="values"):
+        event['messages'][-1].pretty_print()
+    blog_result = scienceBlogCreator.get_state(thread)[0]['messages'][-1]
+    st.write(f"**Blog Post:** {blog_result.content}")
 
-        #     for event in scienceBlogCreator.stream(messages,thread,stream_mode="values"):
-        #         event['messages'][-1].pretty_print()
+    # new_state = scienceBlogCreator.get_state(thread).values
+    # for m in new_state['messages']:
+    #     m.pretty_print()
 
+    # print(scienceBlogCreator.get_state(thread).next)
 
-
-            # # Stream execution with updated state
-            # print("\n\nShowing blog\n\n")
-            # for event in scienceBlogCreator.stream(messages, thread, stream_mode="values"):
-            #     event['messages'][-1].pretty_print()
-            # # Display message if transitioning to blog creation
-            # if scienceBlogCreator.get_state(thread).next == "create_blog_entry":
-            #     st.success("✅ Blog created successfully!")
-
-
-
-        # new_state = scienceBlogCreator.get_state(thread).values
-        # for m in new_state['messages']:
-        #     m.pretty_print()
-
-        # print(scienceBlogCreator.get_state(thread).next)
-
-        # print(scienceBlogCreator.get_state(thread).tasks)
-
-        # st.success("✅ Articles found!")
-        # st.subheader("📌 Generated Blog:")
-        # # for article in listed_articles:
-        # #     st.write(article)
-        
+    # print(scienceBlogCreator.get_state(thread).tasks)        
 
 else:
     st.warning("Please enter a topic to research!")
