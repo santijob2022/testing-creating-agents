@@ -81,7 +81,7 @@ def arxiv_search(state: MessagesState):
         top_k_results=2,
         ARXIV_MAX_QUERY_LENGTH=100,
         load_all_available_meta=True,
-        doc_content_chars_max=300
+        doc_content_chars_max=50
     )
     query = state["messages"][-1].content  # Get user query from last message
     # print("Query definition",query)
@@ -100,8 +100,6 @@ def arxiv_search(state: MessagesState):
 
     # Update state with retrieved articles
     return {**state, "arxiv_query": listed_articles}
-
-
 
 
 # #### Wikipedia
@@ -206,7 +204,7 @@ user_input_topic = st.text_input("What do you want to research about in arxiv?",
 
 
 if user_input_topic:
-    with st.spinner("Generating your blog... ⏳"):        
+    with st.spinner("Researching on arxiv... ⏳"):        
         # Input        
         messages = {"messages": HumanMessage(content=user_input_topic)}
         thread={"configurable":{"thread_id":"arxiv_call_1"}}
@@ -214,7 +212,95 @@ if user_input_topic:
         for event in scienceBlogCreator.stream(messages,thread,stream_mode="values"):
             event['messages'][-1].pretty_print()
 
+        ### Ask the user if they want to research in wikipedia
 
+
+        # Ask user if they want to research in Wikipedia
+        st.subheader("🔍 Do you want to clarify any term using Wikipedia?")
+
+        # Initialize session state variables
+        if "researching" not in st.session_state:
+            st.session_state.researching = True
+        if "wiki_queries" not in st.session_state:
+            st.session_state.wiki_queries = []
+
+        # Layout buttons
+        col1, col2 = st.columns(2)
+        
+        with col1:            
+            if st.button("📖 Research"):
+                wiki_term = st.text_input("Enter the term you want to research:")
+                user_input = f"{st.button('📖 Research')} Research {wiki_term}"                
+                st.session_state.wiki_queries.append(wiki_term)
+                st.success(f"✅ Researching: {wiki_term}")
+
+        with col2:
+            if st.button("📝 Create Blog"):
+                wiki_term = st.text_input("Enter the term you want to research:")
+                user_input = f"st.button('📝 Create Blog')"                                
+                st.success(f"✅ Creating Blog...")
+                st.session_state.researching = False  # Stop research phase
+        
+        scienceBlogCreator.update_state(
+            thread,
+            {"messages": [
+                SystemMessage(content="""Based on the next user answer, decide if you should return to the tools 
+                            node to make a wikipedia search or if you should proceed to create  the blog entry."""),
+                HumanMessage(content=user_input)
+            ]},
+            #  as_node="human_feedback"
+        )
+
+        for event in scienceBlogCreator.stream(messages,thread,stream_mode="values"):
+            event['messages'][-1].pretty_print()
+
+        # # Process Wikipedia research while still in research mode
+        # if st.session_state.researching and st.session_state.wiki_queries:
+        #     for query in st.session_state.wiki_queries:
+        #         st.write(f"🔍 Searching Wikipedia for: **{query}**...")
+        #         wiki_result = wiki.run(query)  # Assuming `wiki` is your Wikipedia tool
+        #         st.write(f"📄 **Wikipedia Result:** {wiki_result}")
+
+        # # Transition state in `scienceBlogCreator`
+        # if not st.session_state.researching:
+        #     scienceBlogCreator.update_state(
+        #         thread,
+        #         {"messages": [
+        #             SystemMessage(content="""Based on the next user answer, decide if you should return to the tools 
+        #                         node to make a Wikipedia search or if you should proceed to create the blog entry."""),  
+        #             HumanMessage(content="No, create the blog.")  # Simulating user decision
+        #         ]}
+        #     )
+
+        #     # Stream execution with updated state
+        #     for event in scienceBlogCreator.stream(messages, thread, stream_mode="values"):
+        #         event['messages'][-1].pretty_print()
+
+            st.subheader("📌 Generating Blog from Arxiv Articles...")
+
+
+
+#######################################################################################################
+
+        # user_input=input("Do you want to clarify any term by using Wikipedia?",
+        #                  placeholder="Respond by saying: Yes, Research... or No, create the blog.")
+        
+
+        # user_input="yes, research what is a network in machine learning using wikipedia"
+        # scienceBlogCreator.update_state(
+        #     thread,
+        #     {"messages": [
+        #         SystemMessage(content="""Based on the next user answer, decide if you should return to the tools 
+        #                     node to make a wikipedia search or if you should proceed to create  the blog entry."""),
+        #         HumanMessage(content=user_input)
+        #     ]},
+        #     #  as_node="human_feedback"
+        # )
+
+        # for event in scienceBlogCreator.stream(messages,thread,stream_mode="values"):
+        #     event['messages'][-1].pretty_print()
+
+        
         print("\n\nHEllooooooooooooooooooooooooooooo\n\n")  
 
         new_state = scienceBlogCreator.get_state(thread).values
@@ -224,9 +310,9 @@ if user_input_topic:
         print("\n\nHEllooooooooooooooooooooooooooooo\n\n")        
         
 
-        # scienceBlogCreator.get_state(thread).next
+        print(scienceBlogCreator.get_state(thread).next)
 
-        # scienceBlogCreator.get_state(thread).tasks
+        print(scienceBlogCreator.get_state(thread).tasks)
 
         st.success("✅ Articles found!")
         st.subheader("📌 Generated Blog:")
