@@ -1,5 +1,6 @@
 Blog-CodeReviewer-Orchestrator/envBlog
 Slack/envSlack
+Booking-Reservation-Multimodal/.venv
 Websites/envWeb
 **/.env
 Slack/emailBot/test.ipynb
@@ -7,3 +8,7 @@ Websites/tools_agents.py
 __pycache__/
 *.pyc
 *.pyo
+Blog-CodeReviewer-Orchestrator/Blog/Streamlit/example.py
+Blog-CodeReviewer-Orchestrator/Blog/Streamlit/testing.txt
+Blog-CodeReviewer-Orchestrator/Basic_Code_Reviewer/example.py
+Blog-CodeReviewer-Orchestrator/Examples
