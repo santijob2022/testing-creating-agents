@@ -1,0 +1,12 @@
+[project]
+name = "booking-reservation-multimodal"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10.0"
+dependencies = [
+    "anthropic>=0.51.0",
+    "gradio>=5.29.0",
+    "openai>=1.77.0",
+    "python-dotenv>=1.1.0",
+]
