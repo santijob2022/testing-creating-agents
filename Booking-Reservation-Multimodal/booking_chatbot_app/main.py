@@ -5,6 +5,7 @@
 
 ### Importing local modules
 from audio import talker
+from images.images import welcome_image
 
 import warnings
 import logging
@@ -36,7 +37,7 @@ google_api_key = os.getenv('GOOGLE_API_KEY')
 deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
 
 if openai_api_key:
-    print(f"OpenAI API Key exists and begins {openai_api_key[:8]}")
+    print(f"OpenAI API Key exists and begins {openai_api_key[:7]}")
 else:
     print("OpenAI API Key not set")
     
@@ -51,7 +52,7 @@ else:
     print("Deepseek API Key not set")
 
 if google_api_key:
-    print(f"Google API Key exists and begins {google_api_key[:8]}")
+    print(f"Google API Key exists and begins {google_api_key[:7]}")
 else:
     print("Google API Key not set")
 
@@ -66,50 +67,6 @@ deepseek = OpenAI(
     api_key=deepseek_api_key, 
     base_url="https://api.deepseek.com"
 )
-
-
-# ### Creating Welcome Image with dall-e-3
-
-
-import base64
-from io import BytesIO
-from PIL import Image
-
-def welcome_image():
-    """Function to generate the welcome image in the chatbot making reference to the Booking experience."""
-
-    if os.path.exists("welcome_image_booking.png"):
-        image = Image.open("welcome_image_booking.png")
-    else:
-        image_response = openai.images.generate(
-                model="dall-e-3",
-                prompt=f"""Create a photorealistic welcome image with the text 
-                "Welcome!"
-                in a clear, elegant, and formal font.             
-                In the center, there's a modern glass hut. 
-                In front of the hut, a couple is peacefully sitting on the ground, gently illuminated by sun rays 
-                filtering through the canopy. Around the border of the image, the subtle silhouettes of curious 
-                jungle animals are partially visible, watching the couple with interest. 
-                The overall mood is serene and inviting.
-                The background features a lush jungle with vivid greenery.
-                """,
-                size="1024x1024",
-                quality="standard",
-                n=1,
-                response_format="b64_json",
-                style="vivid"       
-            )
-        image_base64 = image_response.data[0].b64_json
-        image_data = base64.b64decode(image_base64)
-        image = Image.open(BytesIO(image_data))
-
-        # Save the image
-        image.save("welcome_image_booking.png", format="PNG")
-        print("Image generated and saved.")
-    # Display the image
-    # display(image)
-    
-    return image
 
 
 
@@ -198,7 +155,7 @@ def chat(prompt, history, model):
 with gr.Blocks() as ui:
     with gr.Row():
         chatbot = gr.Chatbot(value=[],height=500, type="messages")
-        image_output = gr.Image(value=welcome_image(),height=500)
+        image_output = gr.Image(value=welcome_image(openai),height=500)
     with gr.Row():        
         entry = gr.Textbox(label="Chat with our AI Assistant:")
     with gr.Row():        
