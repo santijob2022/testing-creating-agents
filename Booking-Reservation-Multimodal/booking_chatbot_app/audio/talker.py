@@ -6,7 +6,7 @@ from pydub import AudioSegment
 from pydub.playback import play
 import threading
 
-def talker(message,openai):
+def talker_output(message,openai):
     # Generate speech
     response = openai.audio.speech.create(
         model="tts-1",

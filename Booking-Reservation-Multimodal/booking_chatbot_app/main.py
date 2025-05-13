@@ -2,7 +2,7 @@
 ### Importing local modules
 from audio import talker
 from images.images import welcome_image
-from models.chat_models import ChatModelRouter
+from models.chat_models_router import ChatModelRouter
 
 import os
 import json
