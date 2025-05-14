@@ -3,6 +3,11 @@ from models.claude_model import ClaudeModel
 from models.deepseek_model import DeepseekModel
 
 class ChatModelRouter:
+    """
+    According to the model selected by the user in the ui gradio this class will call the chat
+    with the appropriate args.
+    """
+
     def __init__(self, api_keys: dict, system_message: str):
         self.models = {
             "GPT": GPTModel(api_keys.get("openai"), system_message),

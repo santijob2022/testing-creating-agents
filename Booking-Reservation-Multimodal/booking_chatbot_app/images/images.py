@@ -4,18 +4,21 @@ import base64
 from io import BytesIO
 from PIL import Image
 import os
+from openai import OpenAI
 
-def welcome_image(openai):
+def welcome_image():
     """Function to generate the welcome image in the chatbot making reference to the Booking experience."""
     
+    image_name = "welcome_image_booking.png"
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    image_path = os.path.join(current_dir, "welcome_image_booking.png")
+    image_path = os.path.join(current_dir, image_name)
+    openai_client = OpenAI()
 
     if os.path.exists(image_path):
         image = Image.open(image_path)
 
     else:
-        image_response = openai.images.generate(
+        image_response = openai_client.images.generate(
                 model="dall-e-3",
                 prompt=f"""Create a photorealistic welcome image with the text 
                 "Welcome!"
@@ -38,7 +41,7 @@ def welcome_image(openai):
         image = Image.open(BytesIO(image_data))
 
         # Save the image
-        image.save("welcome_image_booking.png", format="PNG")
+        image.save(image_path, format="PNG")
         print("Image generated and saved.")
     # Display the image
     # display(image)
