@@ -10,13 +10,13 @@ class ChatModelRouter:
             "Deepseek": DeepseekModel(api_keys.get("deepseek"), system_message),
         }
 
-    def chat(self, prompt, history, model, stream=True):
+    def chat(self, prompt, history, model, stream=False):
         if model not in self.models:
             yield history + [{"role": "assistant", "content": f"Unknown model '{model}' selected."}]
             return
 
         if stream:
-            yield from self.models[model].respond_stream(prompt, history or [])
+            yield from self.models[model].response_stream(prompt, history or [], stream)
         else:
-            answer = self.models[model].respond_full(prompt, history or [])
+            answer = self.models[model].response_full(prompt, history or [], stream)
             yield history + [{"role": "user", "content": prompt}, {"role": "assistant", "content": answer}]

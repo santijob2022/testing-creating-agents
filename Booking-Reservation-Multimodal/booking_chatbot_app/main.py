@@ -70,7 +70,7 @@ with gr.Blocks() as ui:
             history = []
         history += [{"role": "user", "content": message}]
         return "", history, model
-    
+
     entry.submit(fn=do_entry, 
                  inputs=[entry, chatbot, model_selector], 
                  outputs=[entry, chatbot,model_selector]).then(
