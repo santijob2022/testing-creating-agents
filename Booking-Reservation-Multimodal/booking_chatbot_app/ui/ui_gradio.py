@@ -10,6 +10,11 @@ def build_gradio_ui(router):
             image_output = gr.Image(value=welcome_image(),height=500)
         with gr.Row():        
             entry = gr.Textbox(label="Chat with our AI Assistant:")
+        with gr.Row():
+            audio_input = gr.Checkbox(label="Use Microphone Input", value=False)
+            # If not audio output we want to stream the response
+            audio_output = gr.Checkbox(label="Use Voice Output", value=False)
+
         with gr.Row():        
             model_selector = gr.Dropdown(["GPT", "Claude", "Deepseek"], label="Select model", value="GPT")
         with gr.Row():
@@ -22,12 +27,12 @@ def build_gradio_ui(router):
                 history = []
             history += [{"role": "user", "content": message}]
             return "", history, model
-
+        
         entry.submit(fn=do_entry, 
                     inputs=[entry, chatbot, model_selector], 
                     outputs=[entry, chatbot,model_selector]).then(
                         router.chat, 
-                        inputs=[entry, chatbot, model_selector], 
+                        inputs=[entry, chatbot, model_selector,audio_output], 
                         outputs=chatbot
                         ).then(
                             lambda: "", None, entry

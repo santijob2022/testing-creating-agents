@@ -31,6 +31,7 @@ class GPTModel:
                              {"role": "assistant", "content": assistant_msg}]
 
     def response_full(self, prompt, history,stream):
+
         messages = self.messages_state(prompt, history)    
         full_response = self.completion(messages,stream)    
 
