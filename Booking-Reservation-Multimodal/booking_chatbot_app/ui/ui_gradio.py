@@ -6,8 +6,8 @@ from ui.gradio_text_input import setup_text_input
 def build_gradio_ui(router):
     with gr.Blocks() as ui:
         with gr.Row():
-            chatbot = gr.Chatbot(value=[], height=500, type="messages")
-            gr.Image(value=welcome_image(), height=500)
+            chatbot = gr.Chatbot(value=[], height=400, type="messages")
+            gr.Image(value=welcome_image(), height=400)
 
         with gr.Row():
             entry = gr.Textbox(label="Chat with our AI Assistant:")
@@ -17,7 +17,8 @@ def build_gradio_ui(router):
             audio_output_checkbox = gr.Checkbox(label="Use Voice Output", value=False)
 
         with gr.Row(visible=False) as audio_row:
-            mic_input = gr.Audio(sources="microphone", type="filepath", label="Record your message")
+            # mic_input = gr.Audio(sources="microphone", type="filepath", label="Record your message")
+            mic_input = gr.Audio(sources="microphone", type="numpy", label="Record your message")
 
         with gr.Row():
             model_selector = gr.Dropdown(["GPT", "Claude", "Deepseek"], label="Select model", value="GPT")

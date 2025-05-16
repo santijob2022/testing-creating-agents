@@ -1,3 +1,4 @@
+
 def setup_text_input(entry, chatbot, model_selector, audio_output_checkbox, audio_input_checkbox, router):
     def text_entry(message, history, model, mic_enabled):
         if mic_enabled:  # don't handle if mic is enabled
