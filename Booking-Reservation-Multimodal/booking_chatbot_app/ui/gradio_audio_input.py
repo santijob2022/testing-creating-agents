@@ -7,7 +7,7 @@ def setup_voice_input(mic_input, chatbot, model_selector, audio_output_checkbox,
         if not audio_data or not mic_enabled:
             return history, None
 
-        sample_rate, waveform = audio_data  # Gradio gives (np.ndarray, int)
+        sample_rate, waveform = audio_data 
         transcript = audio_receiver(waveform,sample_rate)
 
         final_history = []

@@ -26,18 +26,26 @@ class ClaudeModel:
             messages=[{"role": "user", "content": prompt}],
         )
 
-    def response_stream(self, prompt, history,stream):
-        prompt = self.message_state(prompt,history) 
+
+    def response_stream(self, prompt, history, stream):
+        prompt = self.message_state(prompt, history)
         if not prompt:
             yield history + [{"role": "assistant", "content": "(Empty prompt)"}]
-            return           
-        result = self.completion(prompt,stream)
+            return
+
+        result = self.completion(prompt, stream)
 
         assistant_msg = ""
+
+        # Only append user prompt if it's not already in history
+        if not history or history[-1]["role"] != "user" or history[-1]["content"] != prompt:
+            history = history + [{"role": "user", "content": prompt}]
+
         with result as stream:
             for text in stream.text_stream:
                 assistant_msg += text or ""
                 yield history + [{"role": "assistant", "content": assistant_msg}]
+
 
     def response_full(self, prompt, history, stream):
         prompt = self.message_state(prompt,history)
