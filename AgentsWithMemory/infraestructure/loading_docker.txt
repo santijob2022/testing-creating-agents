@@ -2,18 +2,14 @@
 docker pull mongodb/mongodb-community-server:latest
 
 # Exposing to local machine
-docker run --name job_email_agent \
-  -p 127.0.0.1:27017:27017 \
-  -d mongodb/mongodb-community-server:latest
-
-docker run --name my_local_mongo \
+docker run --name name \
   -p 127.0.0.1:27017:27017 \
   -d mongodb/mongodb-community-server:latest
 
 # Stop mongo container
-docker stop mongodb
+docker stop name
 
 # Restart
-docker start mongodb  # restart later if needed
+docker start name  # restart later if needed
 
 
