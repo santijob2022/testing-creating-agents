@@ -1,0 +1,11 @@
+# Creatign the container
+docker pull mongodb/mongodb-community-server:latest
+
+# Exposing to local machine
+docker run --name mongodb -p 27017:27017 -d mongodb/mongodb-community-server:latest
+
+# Stop mongo container
+docker stop mongodb
+
+# Restart
+docker start mongodb  # restart later if needed
