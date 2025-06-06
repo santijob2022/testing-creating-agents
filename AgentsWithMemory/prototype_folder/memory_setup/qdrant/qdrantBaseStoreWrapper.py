@@ -1,6 +1,6 @@
 # qdrantBaseStoreWrapper.py
 
-from typing import Any, Tuple
+from typing import Any, Tuple, Optional
 from qdrant_client.models import PointStruct, Filter, FieldCondition, MatchValue
 from qdrant_client import QdrantClient
 from langchain.vectorstores import Qdrant
@@ -23,6 +23,25 @@ class QdrantBaseStoreWrapper(BaseStore):
             for part in self.namespace
         )
         return "/".join(resolved)
+    
+    def list_namespaces(self) -> list[tuple[str, ...]]:
+        """List all unique namespaces stored in Qdrant."""
+        response = self.client.scroll(
+            collection_name=self.collection_name,
+            with_payload=True,
+            limit=10000  # Adjust as needed
+        )[0]
+
+        namespaces = set()
+        for point in response:
+            ns = point.payload.get("namespace")
+            if isinstance(ns, str):
+                # Stored as string, maybe joined like "a/b/c"
+                namespaces.add(tuple(ns.split("/")))
+            elif isinstance(ns, (list, tuple)):
+                namespaces.add(tuple(ns))
+        return list(namespaces)
+
 
     def _build_filter(self, namespace: str, key: str = None):
         conditions = [
@@ -69,40 +88,48 @@ class QdrantBaseStoreWrapper(BaseStore):
     def search(
         self,
         namespace: Tuple[str, ...],
-        query: str,
+        query: Optional[str] = None,
         *,
-        limit: int = 3,
+        limit: int = 10,
         filter: dict = None,
         offset: int = 0,
         **kwargs
     ) -> list[Document]:
         ns_string = "/".join(namespace)
-        vector = self.embedding.embed_query(query)
 
-        results = self.client.search(
-            collection_name=self.collection_name,
-            query_vector=vector,
-            limit=limit,
-            offset=offset,
-            query_filter=self._build_filter(ns_string),
-            **kwargs
-        )
+        if query:
+            vector = self.embedding.embed_query(query)
+            results = self.client.search(
+                collection_name=self.collection_name,
+                query_vector=vector,
+                limit=limit,
+                offset=offset,
+                query_filter=self._build_filter(ns_string),
+                **kwargs
+            )
+        else:
+            # Fallback to full scroll if no query is provided
+            results, _ = self.client.scroll(
+                collection_name=self.collection_name,
+                scroll_filter=self._build_filter(ns_string),
+                limit=limit,
+                offset=offset,
+            )
 
         documents = []
         for hit in results:
             payload = hit.payload
             value = payload.get("value")
 
-            if isinstance(value, dict):
-                content = value.get("content", str(value))  # fallback if "content" missing
-            else:
-                content = str(value)
+            content = (
+                value.get("content", str(value)) if isinstance(value, dict) else str(value)
+            )
 
             documents.append(Document(
                 page_content=content,
-                metadata={"namespace": ns_string, "key": payload.get("key")},
-                id=str(hit.id) if hit.id else None
+                metadata={"namespace": ns_string, "key": payload.get("key")}
             ))
 
         return documents
+
 
