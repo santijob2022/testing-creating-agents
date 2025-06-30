@@ -15,7 +15,6 @@ function App() {
         <Route element={<Layout/>}>
           <Route path='/' element={<ChallengeGenerator/>}/>
           <Route path='/history' element={<HistoryPanel/>}/>
-
         </Route>       
         
       </Routes>    
