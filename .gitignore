@@ -15,3 +15,54 @@ Blog-CodeReviewer-Orchestrator/Examples
 WorkingWithOpenSource/HugginfaceMeetingsGeneration/meetingMinutes
 WorkingWithOpenSource/HugginfaceMeetingsGeneration/audio-alameda-9
 WorkingWithOpenSource/HugginfaceMeetingsGeneration/den
+FineTunning-RAG/MultiAgent-PricePrediction/Data/
+
+# Pickle files
+**/*.pkl
+
+# Node.js
+node_modules/
+**/node_modules/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+env/
+venv/
+.venv/
+**/env/
+**/venv/
+**/.venv/
+
+# Build output
+dist/
+build/
+**/dist/
+**/build/
+
+# Environment variables
+.env*
+**/.env*
+
+# Log files
+*.log
+**/*.log
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+
+# Test / coverage
+coverage/
+**/coverage/
+.pytest_cache/
+*.lcov
+
+# Misc
+.DS_Store
+Thumbs.db
+*.sqlite3
+*.db
